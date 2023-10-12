@@ -21,4 +21,4 @@ ENV GOOGLE_CLIENT_ID=your_google_client_id
 ENV SESSION_SECRET_KEY=your_session_secret_key
 
 # Run your Flask app
-CMD ["python", "your_flask_app.py"]
+CMD ["python", "app.py"]
