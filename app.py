@@ -12,7 +12,7 @@ app.secret_key = os.environ.get('SESSION_SECRET_KEY', 'image-manager-app')
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '110981627320-n8tfb1l2lpodpojmgqkfg45q84rs630n.apps.googleusercontent.com')
 
 # Path to your client secret file
-CLIENT_SECRETS_FILE = './client_secret.json'
+CLIENT_SECRETS_FILE = 'client_secret.json'
 
 # Set up OAuth2 flow
 flow = Flow.from_client_secrets_file(
@@ -22,7 +22,7 @@ flow = Flow.from_client_secrets_file(
 )
 
 # Set the relative path to the service account key JSON file
-service_account_key_path = './service-account-key.json'
+service_account_key_path = 'service-account-key.json'
 
 # Set the GOOGLE_APPLICATION_CREDENTIALS environment variable
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = service_account_key_path
