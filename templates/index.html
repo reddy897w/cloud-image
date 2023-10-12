@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cloud Image Manager</title>
+    <style>
+        /* Reset some default styles */
+body, h1, h2, p {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+}
+
+nav {
+    background-color: #0074b8;
+    color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.nav-links {
+    display: flex;
+}
+
+.logout-btn {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.upload-section {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.upload-btn {
+    background-color: #0074b8;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.upload-btn:hover {
+    background-color: #0056b3;
+}
+
+.image-gallery {
+    margin-top: 20px;
+    margin-left: 5px;
+}
+
+h2 {
+    font-size: 24px;
+    color: #0074b8;
+    margin-bottom: 10px;
+}
+
+.images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.image-container {
+    background-color: #ffffff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+.image-options {
+    background-color: #f0f0f0;
+    padding: 10px;
+    text-align: center;
+}
+
+.image-btn {
+    background-color: #0074b8;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    margin: 5px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.image-btn:hover {
+    background-color: #0056b3;
+}
+
+
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="logo">
+          <h1>Google Cloud Image Manager</h1>
+      </div>
+      <div class="nav-links">
+          <form action="{{ url_for('logout') }}" method="post">
+              <button class="logout-btn">Logout</button>
+          </form>
+      </div>
+  </nav>
+
+  <div class="container">
+      <h2>Upload an Image</h2>
+      <div class="upload-section">
+          <form action="/" method="post" enctype="multipart/form-data">
+              <input hidden type="file" name="imageInput" id="imageInput" accept="image/*" required />
+              <label for="imageInput" class="upload-btn">Choose Image</label>
+              <input type="submit" value="Upload" class="upload-btn" />
+          </form>
+      </div>
+  </div>
+
+  <div class="image-gallery">
+      <h2>Your Image Gallery</h2>
+      <div class="images">
+          {% for img in images %}
+          <div class="image-container">
+              <img src="{{ 'https://storage.googleapis.com/cloud-image-app/' ~ img }}" alt="Uploaded Image" />
+              <div class="image-options">
+                  <a href="{{ url_for('view_image', filename=img) }}" target="_blank" class="image-btn view-btn">View</a>
+                  <a href="{{ 'https://storage.googleapis.com/cloud-image-app/' ~ img }}" download class="image-btn download-btn">Download</a>
+                  <a href="{{ url_for('delete_image', filename=img) }}" class="image-btn delete-btn">Delete</a>
+              </div>
+          </div>
+          {% endfor %}
+      </div>
+  </div>
+  </body>
+</html>

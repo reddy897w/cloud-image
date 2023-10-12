@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Image</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        img {
+            max-width: 80%;
+            max-height: 80%;
+            margin: 20px 0;
+        }
+        .filename {
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="filename">{{ filename }}</div>
+    <img src="{{ url_for('uploaded_file', filename=filename) }}" alt="Uploaded Image">
+    <div class="buttons">
+        <a href="{{ url_for('uploaded_file', filename=filename) }}" download>
+            <button>Download</button>
+        </a>
+        <a href="{{ url_for('index') }}">
+            <button>Back</button>
+        </a>
+    </div>
+</body>
+</html>

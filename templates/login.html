@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+
+    <style>
+      * {
+        font-family: Arial, sans-serif;
+      }
+
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        margin: 0;
+        width: 100vw;
+        min-height: 100vh;
+      }
+      .bar {
+        height: 100px;
+      }
+    </style>
+
+    <script>
+      function handleCredentialResponse({ credential }) {
+        if (credential) {
+          const idToken = credential;
+
+          fetch("/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ idToken: idToken }),
+            redirect: "follow",
+          }).then((res) => {
+            if (res.redirected) window.location.href = res.url;
+          });
+        } else {
+          console.error("Google Sign-In error:", response.error);
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Image Manager</h1>
+
+    <p>Login to view and upload your images</p>
+    <form method="POST">
+      <label for="email">Email:</label>
+      <input type="text" name="email" id="email" required><br><br>
+      <label for="password">Password:</label>
+      <input type="password" name="password" id="password" required><br><br>
+      <input type="submit" value="Login">
+  </form>
+  </body>
+</html>
