@@ -1,23 +1,23 @@
 # Use an official Python runtime as a parent image
-FROM python:3.11.4
+FROM python:3.8-slim
 
 # Set the working directory to /app
 WORKDIR /app
 
-# Copy the entire project directory into the container
+# Copy the current directory contents into the container at /app
 COPY . /app
 
-# Copy the service account key file into the container
-COPY service-account-key.json /app/service-account-key.json
-
 # Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
-# Expose the port your app runs on
-EXPOSE 5000
+# Make port 8080 available to the world outside this container
+EXPOSE 8080
 
-# Define environment variable if needed
-# ENV NAME World
+# Create a non-root user
+RUN useradd -r -u 1000 myuser
 
-# Run your app
+# Set the user
+USER myuser
+
+# Run app.py when the container launches
 CMD ["python", "app.py"]

@@ -1,3 +1,14 @@
-# Use the official Python image as the base image
-buildCommand: "docker build -t image-manager ."
-startCommand: "docker run -p 8080:8080 image-manager"
+services:
+  - name: flask-app
+    env:
+      - key: GOOGLE_APPLICATION_CREDENTIALS
+        value: service-account-key.json
+      - key: image-manager-app
+        value: your-secret-key
+      - key: GOOGLE_CLIENT_ID
+        value: your-google-client-id
+    build:
+      dockerfile: Dockerfile
+      context: ./  # Path to your app's code
+    port: 8080  # Use the same port as specified in your Dockerfile
+    start_command: ["python", "app.py"]

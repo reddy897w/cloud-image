@@ -1,10 +1,18 @@
 import os
+
+# Retrieve the service account key path from an environment variable
+service_account_key_path = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS', 'service-account-key.json')
+
+# Set the GOOGLE_APPLICATION_CREDENTIALS environment variable
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = service_account_key_path
+
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, session, abort
 from google.oauth2 import id_token
 from google_auth_oauthlib.flow import Flow
 from google.cloud import storage, datastore
 
+# Now, initialize your Flask app
 app = Flask(__name__)
 app.secret_key = os.environ.get('SESSION_SECRET_KEY', 'image-manager-app')
 
@@ -21,14 +29,10 @@ flow = Flow.from_client_secrets_file(
     redirect_uri="http://your-app-url.com/callback"
 )
 
-# Set the relative path to the service account key JSON file
-service_account_key_path = 'service-account-key.json'
-
-# Set the GOOGLE_APPLICATION_CREDENTIALS environment variable
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = service_account_key_path
-
+# Initialize your Google Cloud clients
 storage_client = storage.Client()
 datastore_client = datastore.Client()
+
 
 # Helper function to check if a user is logged in
 def login_is_required(function):
