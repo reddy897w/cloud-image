@@ -3,3 +3,4 @@ PyJWT
 google-auth
 google-cloud-storage
 google-cloud-datastore
+google-auth-oauthlib
