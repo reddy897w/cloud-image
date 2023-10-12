@@ -12,7 +12,7 @@ app.secret_key = os.environ.get('SESSION_SECRET_KEY', 'image-manager-app')
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '110981627320-n8tfb1l2lpodpojmgqkfg45q84rs630n.apps.googleusercontent.com')
 
 # Path to your client secret file
-CLIENT_SECRETS_FILE = 'client_secret.json'
+CLIENT_SECRETS_FILE = './client_secret.json'
 
 # Set up OAuth2 flow
 flow = Flow.from_client_secrets_file(
@@ -21,8 +21,12 @@ flow = Flow.from_client_secrets_file(
     redirect_uri="http://your-app-url.com/callback"
 )
 
-# Configure Google Cloud Storage and Datastore clients using the service account key
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'service-account-key.json'
+# Set the relative path to the service account key JSON file
+service_account_key_path = './service-account-key.json'
+
+# Set the GOOGLE_APPLICATION_CREDENTIALS environment variable
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = service_account_key_path
+
 storage_client = storage.Client()
 datastore_client = datastore.Client()
 
@@ -78,7 +82,7 @@ def index():
         unique_filename = f"{filename_parts[0]}_{datetime.now().strftime('%Y%m%d%H%M%S%f')}{filename_parts[1]}"
 
         # Upload image to Google Cloud Storage
-        bucket = storage_client.bucket('your-bucket-name')
+        bucket = storage_client.bucket('cloud-image-app')
         blob = bucket.blob(unique_filename)
         blob.upload_from_string(
             image.read(),
@@ -109,20 +113,20 @@ def index():
 # View image route
 @app.route('/view/<filename>')
 def view_image(filename):
-    image_url = f"https://storage.googleapis.com/your-bucket-name/{filename}"
+    image_url = f"https://storage.googleapis.com/cloud-image-app/{filename}"
     return render_template('view.html', image_url=image_url, filename=filename)
 
 # Uploaded file route
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
-    image_url = f"https://storage.googleapis.com/your-bucket-name/{filename}"
+    image_url = f"https://storage.googleapis.com/cloud-image-app/{filename}"
     return redirect(image_url)
 
 # Delete image route
 @app.route('/delete/<filename>')
 def delete_image(filename):
     # Delete image from Google Cloud Storage
-    bucket = storage_client.bucket('your-bucket-name')
+    bucket = storage_client.bucket('cloud-image-app')
     blob = bucket.blob(filename)
     blob.delete()
 
@@ -132,5 +136,8 @@ def delete_image(filename):
 
     return redirect(url_for('index'))
 
-if __name__ == '__main':
-    app.run(host='0.0.0.0', port=8080)
+if __name__ == '__main__':
+    app.secret_key = 'image-manager-app'
+    app.config['SESSION_TYPE'] = 'filesystem'
+
+    app.run(host='0.0.0.0', debug=True)
