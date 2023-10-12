@@ -12,7 +12,7 @@ app.secret_key = os.environ.get('SESSION_SECRET_KEY', 'image-manager-app')
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '110981627320-n8tfb1l2lpodpojmgqkfg45q84rs630n.apps.googleusercontent.com')
 
 # Path to your client secret file
-CLIENT_SECRETS_FILE = 'app/client_secret.json'
+CLIENT_SECRETS_FILE = 'client_secret.json'
 
 # Set up OAuth2 flow
 flow = Flow.from_client_secrets_file(
@@ -22,7 +22,7 @@ flow = Flow.from_client_secrets_file(
 )
 
 # Configure Google Cloud Storage and Datastore clients using the service account key
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'app/service-account-key.json'
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'service-account-key.json'
 storage_client = storage.Client()
 datastore_client = datastore.Client()
 
