@@ -1,66 +1,87 @@
 import os
+import pathlib
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, flash, make_response, g, session
-
+from flask import Flask, render_template, request, redirect, url_for, flash, make_response, g, session, abort
+import requests
 from google.oauth2 import id_token
-from google.auth.transport import requests
-
+from google_auth_oauthlib.flow import Flow
+from pip._vendor import cachecontrol
+import google.auth.transport.requests
 from google.cloud import storage, datastore
 
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = './service-account-key.json'
-
 app = Flask(__name__)
-app.secret_key = 'super secret key'  # Set a secret key for session management
+app.secret_key = os.environ.get('SESSION_SECRET_KEY', 'image-manager-app')
+
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = './service-account-key.json'
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 storage_client = storage.Client()
 datastore_client = datastore.Client()
 
 BUCKET_NAME = "cloud-image-app"
 
-# Define the allowed email and password
-ALLOWED_EMAIL = "sreedharreddy775@gmail.com"
-ALLOWED_PASSWORD = "Cloudmail@321"
+# Store sensitive information in environment variables
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', "110981627320-n8tfb1l2lpodpojmgqkfg45q84rs630n.apps.googleusercontent.com")
 
+client_secrets_file = os.path.join(pathlib.Path(__file__).parent, "client_secret.json")
 
-@app.before_request
-def request_logger():
-    print("--------------------------------------")
-    print(request.method, "-", request.path)
+flow = Flow.from_client_secrets_file(
+    client_secrets_file=client_secrets_file,
+    scopes=["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email", "openid"],
+    redirect_uri="http://127.0.0.1:5000/callback"
+)
 
-
-
-@app.before_request
-def protect():
-    if not session.get('logged_in') and request.endpoint != "login":
-        flash('You need to log in first', 'error')
-        return redirect(url_for('login'))
-
-
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        email = request.form.get("email")
-        password = request.form.get("password")
-
-        # Check if the entered credentials are correct
-        if email == ALLOWED_EMAIL and password == ALLOWED_PASSWORD:
-            # Set a session variable to indicate the user is logged in
-            session['logged_in'] = True
-            return redirect(url_for("index"))
+# Helper function to check if a user is logged in
+def login_is_required(function):
+    def wrapper(*args, **kwargs):
+        if "google_id" not in session:
+            return abort(401)  # Authorization required
         else:
-            flash('Invalid email or password', 'error')
-    return render_template('login.html')
+            return function()
+    return wrapper
 
+# Login route
+@app.route("/login")
+def login():
+    authorization_url, state = flow.authorization_url()
+    session["state"] = state
+    return redirect(authorization_url)
 
+# Callback route
+@app.route("/callback")
+def callback():
+    flow.fetch_token(authorization_response=request.url)
+    if not session["state"] == request.args["state"]:
+        abort(500)  # State does not match!
 
-# Add a logout route to clear the session
-@app.route("/logout", methods=["POST"])
+    credentials = flow.credentials
+    request_session = requests.session()
+    cached_session = cachecontrol.CacheControl(request_session)
+    token_request = google.auth.transport.requests.Request(session=cached_session)
+
+    id_info = id_token.verify_oauth2_token(
+        id_token=credentials._id_token,
+        request=token_request,
+        audience=GOOGLE_CLIENT_ID
+    )
+
+    session["google_id"] = id_info.get("sub")
+    session["name"] = id_info.get("name")
+    return redirect("/protected_area")
+
+# Logout route
+@app.route("/logout")
 def logout():
-    session.pop('logged_in', None)
-    return redirect(url_for("login"))
+    session.clear()
+    return redirect("/")
 
+# Protected area route
+@app.route("/protected_area")
+@login_is_required
+def protected_area():
+    return f"Hello {session['name']}! <br/> <a href='/logout'><button>Logout</button></a>"
 
+# Index route
 @app.route('/', methods=['GET', 'POST'])
 def index():
     email = g.get('email', '')
@@ -96,22 +117,22 @@ def index():
         filter=datastore.query.PropertyFilter('user', '=', email))
     all_images = list(query.fetch())
     all_images = [image['filename'] for image in all_images]
-    print(all_images)
 
     return render_template('index.html', images=all_images)
 
-
+# View image route
 @app.route('/view/<filename>')
 def view_image(filename):
     image_url = f"https://storage.googleapis.com/cloud-image-app/{filename}"
     return render_template('view.html', image_url=image_url, filename=filename)
 
+# Uploaded file route
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     image_url = f"https://storage.googleapis.com/cloud-image-app/{filename}"
     return redirect(image_url)
 
-
+# Delete image route
 @app.route('/delete/<filename>')
 def delete_image(filename):
     # Delete image from GCP Storage
@@ -125,9 +146,6 @@ def delete_image(filename):
 
     return redirect(url_for('index'))
 
-
 if __name__ == '__main__':
-    app.secret_key = 'super secret key'
     app.config['SESSION_TYPE'] = 'filesystem'
-
     app.run(host='0.0.0.0', debug=True)
