@@ -35,7 +35,7 @@ flow = Flow.from_client_secrets_file(
 def login_is_required(function):
     def wrapper(*args, **kwargs):
         if "google_id" not in session:
-            return abort(401)  # Authorization required
+            return redirect(url_for('login'))  # Redirect to the login page
         else:
             return function()
     return wrapper
@@ -67,22 +67,17 @@ def callback():
 
     session["google_id"] = id_info.get("sub")
     session["name"] = id_info.get("name")
-    return redirect("/protected_area")
+    return redirect("/index")
 
 # Logout route
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect("/")
+    return redirect("/login")
 
-# Protected area route
-@app.route("/protected_area")
+# Index route, which now requires login
+@app.route('/index', methods=['GET', 'POST'])
 @login_is_required
-def protected_area():
-    return f"Hello {session['name']}! <br/> <a href='/logout'><button>Logout</button></a>"
-
-# Index route
-@app.route('/', methods=['GET', 'POST'])
 def index():
     email = g.get('email', '')
 
